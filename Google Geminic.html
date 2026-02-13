@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How deep is your love?</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #e0f7fa, #e1bee7);
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    h1, h2 { text-align: center; }
+
+    .card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px auto;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.5s ease;
+    }
+
+    .card.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .question { 
+      font-weight: bold; 
+      margin-bottom: 10px; 
+      line-height: 1.4;
+    }
+
+    
+    #fullName, 
+    #answerInput {
+      width: 90%;
+      max-width: 500px;
+      display: block;
+      margin: 0 auto 20px auto;
+      padding: 12px;
+      border-radius: 8px;
+      border: 2px solid #ccc;
+      font-size: 1em;
+      text-align: left;
+      box-sizing: border-box;
+      resize: vertical;
+      animation: rainbowGlow 4s linear infinite;
+    }
+
+    @keyframes rainbowGlow {
+      0%   { box-shadow: 0 0 8px #ff0000; border-color: #ff0000; }
+      25%  { box-shadow: 0 0 8px #ff9900; border-color: #ff9900; }
+      50%  { box-shadow: 0 0 8px #00ccff; border-color: #00ccff; }
+      75%  { box-shadow: 0 0 8px #9933ff; border-color: #9933ff; }
+      100% { box-shadow: 0 0 8px #ff0000; border-color: #ff0000; }
+    }
+
+    label {
+      display: block;
+      width: 90%;
+      max-width: 500px;
+      margin: 10px auto 8px auto;
+      font-size: 1em;
+      text-align: left;
+    }
+
+    button {
+      display: block;
+      margin: 15px auto 0 auto;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      background: #444;
+      color: #fff;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+      width: fit-content;
+    }
+
+    button:hover, button:focus {
+      background: #222;
+      box-shadow: 0 0 10px rgba(34, 34, 34, 0.5);
+      outline: none;
+    }
+
+    #resultBox { display: none; }
+    .score { font-weight: bold; }
+    .low { color: #b00; }
+    .mid { color: #e69500; }
+    .high { color: #008000; }
+    .progress { text-align: center; font-size: 0.95em; color: #666; margin-bottom: 10px; }
+    #consentError { color: #b00; font-weight: bold; display: none; }
+
+    /* Responsive tweaks */
+    @media (max-width: 768px) {
+      body { padding: 10px; }
+      .card { padding: 15px; }
+      #fullName, #answerInput, label { width: 95%; font-size: 1em; }
+      button { font-size: 0.95em; padding: 10px 20px; }
+    }
+
+    @media (max-width: 480px) {
+      body { align-items: stretch; }
+      h1 { font-size: 1.4em; }
+      h2 { font-size: 1.1em; }
+      #fullName, #answerInput { font-size: 0.95em; }
+      button { width: 100%; max-width: 400px; }
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
+    }
+    .shake { animation: shake 0.4s; }
+  </style>
+</head>
+<body>
+  <div class="card show" id="consentCard">
+    <h1>How deep is your love?</h1>
+    <h2>Consent First</h2>
+    <p>You must agree before starting. This is an ethical, trust-based exercise — not manipulation.</p>
+    <label>
+      <input type="checkbox" id="consentCheck"> I agree to answer honestly and willingly.
+    </label>
+    <label for="fullName">Your Full Name:</label>
+    <input type="text" id="fullName" placeholder="Enter your full name" />
+    <p id="consentError"></p>
+    <button onclick="startSession()">Start</button>
+  </div>
+
+  <div class="card" id="questionCard" style="display:none;">
+    <div class="progress" id="progress"></div>
+    <div id="qBox"></div>
+    <label for="answerInput">Your Answer:</label>
+    <textarea id="answerInput" placeholder="Type answer here..."></textarea>
+    <button onclick="nextQuestion()">Next</button>
+  </div>
+
+  <div class="card" id="resultBox">
+    <h2>Analysis Result</h2>
+    <p>Each question is scored 1–5 based on depth, detail, and vulnerability.  
+      1 = shallow/dishonest, 5 = raw/real love.</p>
+    <h3>Participant: <span id="showName"></span></h3>
+    <div id="scores"></div>
+    <h3>Overall Score: <span id="totalScore"></span>/25</h3>
+    <h3>Interpretation:</h3>
+    <p id="interpretation"></p>
+    <p style="margin-top:20px; font-size:0.9em; text-align:center;">
+      💌 Have feedback or complaints? Email me at  
+      <a href="mailto:k70495150@gmail.com">k70495150@gmail.com</a>
+    </p>
+    <button onclick="restart()">Restart</button>
+  </div>
+
+  <script>
+    const questions = [
+      "What’s the smallest, most ordinary thing they do that makes you love them?",
+      "When did you first notice that thing?",
+      "What’s the worst thing about them you’ve already decided to live with?",
+      "If they disappeared tomorrow, what would collapse first in your life?",
+      "Would you still love them if they begged you to walk away for their happiness?"
+    ];
+
+    let current = 0, answers = [], scores = [], fullName = "", questionStartTime = 0;
+
+    function fadeOutIn(hideId, showId) {
+      const hideEl = document.getElementById(hideId);
+      const showEl = document.getElementById(showId);
+      hideEl.classList.remove("show");
+      setTimeout(() => {
+        hideEl.style.display = "none";
+        showEl.style.display = "block";
+        setTimeout(() => showEl.classList.add("show"), 50);
+      }, 500);
+    }
+
+    function startSession() {
+      const errorEl = document.getElementById('consentError');
+      const consentBox = document.getElementById('consentCheck');
+      const nameInput = document.getElementById('fullName');
+      errorEl.style.display = "none";
+
+      if (!consentBox.checked) {
+        errorEl.textContent = "⚠️ You must check the consent box to proceed.";
+        errorEl.style.display = "block";
+        document.getElementById("consentCard").classList.add("shake");
+        setTimeout(() => document.getElementById("consentCard").classList.remove("shake"), 500);
+        return;
+      }
+      fullName = nameInput.value.trim();
+      if (!fullName) {
+        errorEl.textContent = "⚠️ Please enter your full name.";
+        errorEl.style.display = "block";
+        document.getElementById("consentCard").classList.add("shake");
+        setTimeout(() => document.getElementById("consentCard").classList.remove("shake"), 500);
+        return;
+      }
+      fadeOutIn('consentCard', 'questionCard');
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      document.getElementById('progress').textContent = `Question ${current+1} of ${questions.length}`;
+      document.getElementById('qBox').innerHTML = `<div class='question'>Q${current+1}: ${questions[current]}</div>`;
+      document.getElementById('answerInput').value = '';
+      questionStartTime = Date.now();
+    }
+
+    function scoreAnswer(ans) {
+      ans = ans.trim().toLowerCase();
+      let score = 1;
+      const words = ans.split(/\s+/).filter(Boolean);
+      const uniqueWords = new Set(words);
+
+      function isMeaningful() {
+        return (
+          words.length > 15 ||
+          uniqueWords.size > 10 ||
+          /(love|care|truth|honest|real|accept|forever|always|because|when|since|first|time|day|moment|feel|felt|alive|broken|meaning)/.test(ans)
+        );
+      }
+
+      if (/(love|collapse|forever|always|never|everything|nothing|only|cannot|impossible)/.test(ans)) score++;
+      if (/(feel|felt|hurt|cry|happy|sad|broken|destroyed|alive|meaning)/.test(ans)) score++;
+      if (/(maybe|guess|sort of|kinda|idk|not sure)/.test(ans)) score = Math.max(1, score - 1);
+      if (/(because|when|since|first|time|day|moment)/.test(ans)) score++;
+      if (words.length > 20) score++;
+      if (uniqueWords.size > 15) score++;
+
+      if (words.length > 4 && words.length <= 15) {
+        if (isMeaningful()) score++;
+        else score--;
+      }
+
+      const elapsedSec = (Date.now() - questionStartTime) / 1000;
+      if (isMeaningful()) {
+        if (elapsedSec <= 30) score++;
+        else if (elapsedSec <= 90) score++;
+      } else if (elapsedSec > 30) score--;
+
+      return Math.min(Math.max(score, 1), 5);
+    }
+
+    function nextQuestion() {
+      const ans = document.getElementById('answerInput').value;
+      if (!ans.trim()) {
+        document.getElementById('answerInput').style.border = "2px solid red";
+        return;
+      }
+      document.getElementById('answerInput').style.border = "2px solid #ccc";
+      answers.push(ans);
+      scores.push(scoreAnswer(ans));
+      current++;
+
+      if (current < questions.length) {
+        fadeOutIn('questionCard', 'questionCard');
+        setTimeout(loadQuestion, 500);
+      } else {
+        fadeOutIn('questionCard', 'resultBox');
+        showResults();
+      }
+    }
+
+    function showResults() {
+      document.getElementById('showName').innerText = fullName;
+      let output = "<ul>";
+      for (let i=0; i<questions.length; i++) {
+        let cls = scores[i] <= 2 ? "low" : scores[i] === 3 ? "mid" : "high";
+        output += `<li><b>Q${i+1}:</b> <span class='score ${cls}'>${scores[i]} / 5</span><br><i>${answers[i]}</i></li>`;
+      }
+      output += "</ul>";
+      document.getElementById('scores').innerHTML = output;
+      const total = scores.reduce((a,b)=>a+b,0);
+      document.getElementById('totalScore').innerText = total;
+
+      let interp = "";
+      if (total <= 10) interp = "Very shallow or dishonest. Likely not in love.";
+      else if (total <= 15) interp = "Some feelings, but weak or confused. Could be infatuation.";
+      else if (total <= 20) interp = "Strong emotional investment. Likely genuine love.";
+      else interp = "Deep, vulnerable, undeniable love.";
+
+      document.getElementById('interpretation').innerText = interp;
+      // 🔥 Send answers to backend AI for extra analysis
+async function aiAnalysis() {
+  const url = "https://f13100e32ac7.ngrok-free.app/api/analyze"; 
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: fullName, answers }),
+    });
+
+    const data = await response.json();
+    const aiResult = data.result || "AI analysis unavailable.";
+
+    // Add AI result to your results page
+    const resultBox = document.getElementById("resultBox");
+    const aiDiv = document.createElement("div");
+    aiDiv.innerHTML = `<h3>AI Analysis:</h3><p>${aiResult}</p>`;
+    resultBox.appendChild(aiDiv);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// Call the AI after showing results
+aiAnalysis();
+
+    }
+
+    function restart() {
+      current = 0;
+      answers = [];
+      scores = [];
+      fullName = "";
+      document.getElementById('fullName').value = "";
+      document.getElementById('consentCheck').checked = false;
+      document.getElementById('resultBox').style.display = 'none';
+      document.getElementById('consentCard').style.display = 'block';
+      setTimeout(() => document.getElementById('consentCard').classList.add("show"), 50);
+    }
+  </script>
+</body>
+</html>

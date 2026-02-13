@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="theme-color" content="#0d0d0d" />
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Helpful Assistant</title>
+  <style>
+    * {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background-color: #0d0d0d;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh; /* better mobile support */
+}
+
+header {
+  background-color: #121212;
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid #222;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.chat-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.message {
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  max-width: 85%;
+  word-wrap: break-word;
+  line-height: 1.5;
+  font-size: 0.95rem;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.user {
+  align-self: flex-end;
+  background-color: #3c3cff;
+}
+
+.bot {
+  align-self: flex-start;
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+}
+
+form {
+  display: flex;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0.8rem;
+  background-color: #121212;
+  border-top: 1px solid #222;
+  gap: 0.5rem;
+}
+
+input {
+  flex: 1;
+  background: #1a1a1a;
+  border: none;
+  color: #fff;
+  padding: 0.8rem;
+  border-radius: 12px;
+  font-size: 16px; /* prevents zoom on iPhone */
+  outline: none;
+}
+
+button {
+  background-color: #3c3cff;
+  border: none;
+  color: #fff;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background-color: #5050ff;
+}
+
+.typing {
+  font-size: 0.85rem;
+  color: #aaa;
+  font-style: italic;
+  margin: 0.5rem auto;
+  max-width: 900px;
+}
+
+@media (max-width: 600px) {
+  header h1 {
+    font-size: 1rem;
+  }
+
+  .message {
+    max-width: 95%;
+    font-size: 0.9rem;
+  }
+
+  form {
+    padding: 0.6rem;
+  }
+
+  button {
+    padding: 0.6rem 0.8rem;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Helpful Assistant</h1>
+  </header>
+
+  <main>
+    <div id="chatContainer" class="chat-container">
+      <div class="message bot">👋 Hello! I’m Helpful Assistant. Ask me anything in any language!</div>
+    </div>
+    <div id="typingIndicator" class="typing" style="display:none;">Assistant is typing...</div>
+  </main>
+
+  <form id="chatForm">
+    <input type="text" id="userInput" name="userInput" placeholder="Type your message..." required />
+
+    <button type="submit">Send</button>
+  </form>
+
+  <script>
+const form = document.getElementById("chatForm");
+const input = document.getElementById("userInput");
+const chatContainer = document.getElementById("chatContainer");
+const typingIndicator = document.getElementById("typingIndicator");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const message = input.value.trim();
+  if (!message) return;
+
+  addMessage(message, "user");
+  input.value = "";
+  typingIndicator.style.display = "block";
+
+  const botDiv = addMessage("", "bot");
+
+  try {
+    const res = await fetch("/api/chat", {
+
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prompt: message }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Server response was not ok");
+    }
+
+    const data = await res.json();
+
+    botDiv.textContent = data.reply;
+
+  } catch (err) {
+    console.error("Fetch Error:", err);
+    botDiv.textContent = "⚠️ Error: Cannot reach the server.";
+  } finally {
+    typingIndicator.style.display = "none";
+  }
+});
+
+function addMessage(text, sender) {
+  const div = document.createElement("div");
+  div.classList.add("message", sender);
+  div.textContent = text;
+  chatContainer.appendChild(div);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+  return div;
+}
+</script>
+
+
+</body>
+</html>

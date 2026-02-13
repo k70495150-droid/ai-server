@@ -2,75 +2,81 @@ import express from "express";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
+
 const app = express();
+
+/* ===============================
+   Fix __dirname for ES modules
+================================ */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+/* ===============================
+   MIDDLEWARE
+================================ */
 app.use(express.json());
 app.use(cors());
 
-// Route that sends prompt directly to Gemini (your old route)
-app.post("/api/gemini", async (req, res) => {
-  const userPrompt = req.body.prompt;
+// Serve static files (HTML, CSS, JS)
+app.use(express.static(__dirname));
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: userPrompt }] }],
-      }),
-    }
-  );
-
-  const data = await response.json();
-  res.json(data);
+/* ===============================
+   HOME ROUTE (Serve AI.html)
+================================ */
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "AI.html"));
 });
 
-// 🧠 NEW: analyze love test answers
-app.post("/api/analyze", async (req, res) => {
-  const { name, answers } = req.body;
-
-  // Combine all answers into one AI prompt
-  const userText = answers
-    .map((ans, i) => `Q${i + 1}: ${ans}`)
-    .join("\n");
-
-  const prompt = `
-You are an analysis assistant for a love test.
-The participant's name is ${name}.
-Their answers are:
-${userText}
-
-Please analyze their responses.
-Give:
-1. A short description of their emotional depth and honesty.
-2. A love level in percentage (0–100%).
-3. 1–2 suggestions of what they can do to improve or maintain their love.
-Respond in a short, clear way that fits under 150 words.
-  `;
-
+/* ===============================
+   CHAT ROUTE
+================================ */
+app.post("/api/chat", async (req, res) => {
   try {
+    const userPrompt = req.body.prompt;
+
+    if (!userPrompt) {
+      return res.status(400).json({ error: "Prompt is required" });
+    }
+
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
+          contents: [{ parts: [{ text: userPrompt }] }],
         }),
       }
     );
 
     const data = await response.json();
-    const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI.";
 
-    res.json({ result: aiText });
+    if (data.error) {
+      console.error("Gemini API Error:", data.error);
+      return res.status(500).json({ error: data.error.message });
+    }
+
+    const aiText =
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "No response from AI.";
+
+    res.json({ reply: aiText });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error connecting to Gemini API" });
+    console.error("Server Error:", error);
+    res.status(500).json({ error: "Something went wrong." });
   }
 });
 
-const PORT = 3000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+/* ===============================
+   START SERVER
+================================ */
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
