@@ -12,8 +12,8 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 app.use(express.static(__dirname));
 
 app.get("/", (req, res) => {
@@ -22,40 +22,32 @@ app.get("/", (req, res) => {
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const userPrompt = req.body.prompt;
+    const { prompt } = req.body;
 
-    if (!userPrompt) {
-      return res.status(400).json({ error: "Prompt is required" });
+    if (!prompt) {
+      return res.status(400).json({ error: "Prompt required" });
     }
 
     if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).send("Missing GEMINI_API_KEY.");
+      return res.status(500).json({ error: "Missing API key" });
     }
-
-    res.setHeader("Content-Type", "text/plain; charset=utf-8");
-    res.setHeader("Transfer-Encoding", "chunked");
 
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:streamGenerateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [
             {
               role: "user",
               parts: [
                 {
-                  text: `
-You are a friendly AI assistant.
+                  text: `You are a friendly AI assistant.
 Be slightly conversational and you may use emojis.
 
-
 User message:
-${userPrompt}
-                  `
+${prompt}`
                 }
               ]
             }
@@ -66,13 +58,15 @@ ${userPrompt}
 
     if (!geminiResponse.ok) {
       const errorText = await geminiResponse.text();
-      console.error("Gemini API Error:", errorText);
-      return res.status(500).send("Gemini API error.");
+      console.error("Gemini error:", errorText);
+      return res.status(500).send("Gemini API error");
     }
+
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Transfer-Encoding", "chunked");
 
     let buffer = "";
 
-    // ✅ Node.js streaming way
     for await (const chunk of geminiResponse.body) {
       buffer += chunk.toString();
 
@@ -90,11 +84,11 @@ ${userPrompt}
 
         try {
           const parsed = JSON.parse(line);
-          const textChunk =
+          const text =
             parsed.candidates?.[0]?.content?.parts?.[0]?.text;
 
-          if (textChunk) {
-            res.write(textChunk);
+          if (text) {
+            res.write(text);
           }
         } catch {
           // ignore incomplete JSON
@@ -106,13 +100,13 @@ ${userPrompt}
 
     res.end();
 
-  } catch (error) {
-    console.error("Server Error:", error);
-    res.status(500).send("Something went wrong.");
+  } catch (err) {
+    console.error("Server error:", err);
+    res.status(500).send("Server error");
   }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
