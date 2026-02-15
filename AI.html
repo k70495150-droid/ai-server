@@ -157,11 +157,22 @@ input:disabled {
 
 <script>
   let isGenerating = false;
+  let autoScrollEnabled = true;
   const mainElement = document.getElementById("mainElement");
   const form = document.getElementById("chatForm");
   const input = document.getElementById("userInput");
   const chatContainer = document.getElementById("chatContainer");
   const typingIndicator = document.getElementById("typingIndicator");
+
+  mainElement.addEventListener("scroll", () => {
+  const threshold = 50; // px from bottom
+
+  const isNearBottom =
+    mainElement.scrollHeight - mainElement.scrollTop - mainElement.clientHeight < threshold;
+
+  autoScrollEnabled = isNearBottom;
+});
+
 
   form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -170,6 +181,8 @@ input:disabled {
 
   const message = input.value.trim();
   if (!message) return;
+
+  autoScrollEnabled = true;
 
   isGenerating = true;
 
@@ -193,7 +206,7 @@ input:disabled {
 
     const data = await res.json();
 
-    await typeWriterEffect(botDiv, data.reply, 10);
+    await typeWriterEffect(botDiv, data.reply, 5);
 
   } catch (err) {
     botDiv.textContent = "⚠️ Error: Cannot reach the server.";
@@ -235,8 +248,11 @@ input:disabled {
   }
 
   function scrollToBottom() {
-    mainElement.scrollTop = mainElement.scrollHeight;
-  }
+  if (!autoScrollEnabled) return;
+
+  mainElement.scrollTop = mainElement.scrollHeight;
+}
+
 </script>
 
 </body>
