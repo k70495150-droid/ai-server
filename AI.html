@@ -227,7 +227,7 @@ form.addEventListener("submit", async (e) => {
 
     const data = await res.json();
 
-    async function typeWriterEffect(element, text, speed = 15) {
+    async function typeWriterEffect(element, text, speed = 5) {
   element.innerHTML = "";
   let currentText = "";
 
@@ -239,6 +239,13 @@ form.addEventListener("submit", async (e) => {
 
     await new Promise(resolve => setTimeout(resolve, speed));
   }
+
+ 
+  element.querySelectorAll("pre code").forEach((block) => {
+    hljs.highlightElement(block);
+  });
+}
+
 }
 
 
