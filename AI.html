@@ -5,121 +5,125 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Helpful Assistant</title>
+    <button class="theme-toggle" id="themeToggle">🌙</button>
 
   <style>
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: "Inter", sans-serif;
-      background-color: #0d0d0d;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      height: 100dvh;
-    }
-
-    header {
-      background-color: #121212;
-      padding: 1rem;
-      text-align: center;
-      border-bottom: 1px solid #222;
-    }
-
-    main {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-    }
-
-    .chat-container {
-      max-width: 900px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-    }
-
-    .message {
-      padding: 0.8rem 1rem;
-      border-radius: 14px;
-      max-width: 85%;
-      line-height: 1.5;
-      font-size: 0.95rem;
-      word-wrap: break-word;
-    }
-
-    .user {
-      align-self: flex-end;
-      background-color: #3c3cff;
-    }
-
-    .bot {
-      align-self: flex-start;
-      background-color: #1a1a1a;
-      border: 1px solid #333;
-    }
-
-    .bot pre {
-      background: #111;
-      padding: 12px;
-      border-radius: 10px;
-      overflow-x: auto;
-    }
-
-    .bot code {
-      background: #222;
-      padding: 3px 6px;
-      border-radius: 5px;
-    }
-
-    form {
-      display: flex;
-      width: 100%;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 0.8rem;
-      background-color: #121212;
-      border-top: 1px solid #222;
-      gap: 0.5rem;
-    }
-
-    input {
-      flex: 1;
-      background: #1a1a1a;
-      border: none;
-      color: #fff;
-      padding: 0.8rem;
-      border-radius: 12px;
-      font-size: 16px;
-      outline: none;
-    }
-
-    button {
-      background-color: #3c3cff;
-      border: none;
-      color: #fff;
-      padding: 0.8rem 1rem;
-      border-radius: 12px;
-      cursor: pointer;
-    }
-
-    .typing {
-      font-size: 0.85rem;
-      color: #aaa;
-      font-style: italic;
-      text-align: center;
-      margin-top: 0.5rem;
-    }
-
-    button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+    :root {
+  --bg: #0d0d0d;
+  --header: #121212;
+  --bot: #1a1a1a;
+  --user: #3c3cff;
+  --text: #ffffff;
+  --border: #333;
+  --input: #1a1a1a;
 }
 
-input:disabled {
-  opacity: 0.7;
+.light {
+  --bg: #f4f4f4;
+  --header: #ffffff;
+  --bot: #ffffff;
+  --user: #3c3cff;
+  --text: #000000;
+  --border: #ddd;
+  --input: #ffffff;
 }
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  transition: background 0.3s, color 0.3s;
+}
+
+header {
+  background-color: var(--header);
+  padding: 1rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.chat-container {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.message {
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  max-width: 85%;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.user {
+  align-self: flex-end;
+  background-color: var(--user);
+  color: white;
+}
+
+.bot {
+  align-self: flex-start;
+  background-color: var(--bot);
+  border: 1px solid var(--border);
+}
+
+form {
+  display: flex;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0.8rem;
+  background-color: var(--header);
+  border-top: 1px solid var(--border);
+  gap: 0.5rem;
+}
+
+input {
+  flex: 1;
+  background: var(--input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.8rem;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+button {
+  background-color: var(--user);
+  border: none;
+  color: white;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.theme-toggle {
+  cursor: pointer;
+  background: none;
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  color: var(--text);
+}
+
 
   </style>
 
@@ -150,7 +154,12 @@ input:disabled {
 
 <form id="chatForm">
   <input type="text" id="userInput" placeholder="Type your message..." required />
+  <input type="file" id="fileUpload" hidden>
+  <button type="button" id="uploadBtn">📎</button>
+
+  <button type="button" id="micButton">Voicechat</button>
   <button type="submit">Send</button>
+
 </form>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -163,6 +172,56 @@ input:disabled {
   const input = document.getElementById("userInput");
   const chatContainer = document.getElementById("chatContainer");
   const typingIndicator = document.getElementById("typingIndicator");
+  const themeToggle = document.getElementById("themeToggle");
+  const micButton = document.getElementById("micButton");
+  const uploadBtn = document.getElementById("uploadBtn");
+  const fileUpload = document.getElementById("fileUpload");
+
+uploadBtn.addEventListener("click", () => {
+  fileUpload.click();
+});
+
+fileUpload.addEventListener("change", () => {
+  const file = fileUpload.files[0];
+  if (file) {
+    input.value += ` [Attached file: ${file.name}]`;
+  }
+});
+
+
+if ('webkitSpeechRecognition' in window) {
+  const recognition = new webkitSpeechRecognition();
+  recognition.continuous = false;
+  recognition.lang = "en-US";
+
+  micButton.addEventListener("click", () => {
+    recognition.start();
+  });
+
+  recognition.onresult = (event) => {
+    input.value = event.results[0][0].transcript;
+  };
+} else {
+  micButton.disabled = true;
+}
+
+
+// Load saved theme
+if (localStorage.getItem("theme") === "light") {
+  document.body.classList.add("light");
+  themeToggle.textContent = "☀️";
+}
+
+themeToggle.addEventListener("click", () => {
+  document.body.classList.toggle("light");
+
+  const isLight = document.body.classList.contains("light");
+
+  themeToggle.textContent = isLight ? "☀️" : "🌙";
+
+  localStorage.setItem("theme", isLight ? "light" : "dark");
+});
+
 
   mainElement.addEventListener("scroll", () => {
   const threshold = 50; // px from bottom
