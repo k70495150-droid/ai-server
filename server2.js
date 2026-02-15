@@ -32,16 +32,13 @@ app.post("/api/chat", async (req, res) => {
     }
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:streamGenerateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [
             {
-              role: "user",
               parts: [
                 {
                   text: `You are a friendly AI assistant.
@@ -59,63 +56,21 @@ ${prompt}`
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Gemini API error:", errorText);
-      return res.status(500).send("Gemini API error");
+      console.error("Gemini error:", errorText);
+      return res.status(500).json({ error: "Gemini API error" });
     }
 
-    // Tell browser we are streaming
-    res.setHeader("Content-Type", "text/plain; charset=utf-8");
-    res.setHeader("Transfer-Encoding", "chunked");
+    const data = await response.json();
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
+    const reply =
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "No response generated.";
 
-    let buffer = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-
-      const lines = buffer.split("\n");
-
-      for (let i = 0; i < lines.length - 1; i++) {
-        let line = lines[i].trim();
-
-        if (!line) continue;
-
-        if (line.startsWith("data:")) {
-          line = line.replace("data:", "").trim();
-        }
-
-        if (line === "[DONE]") continue;
-
-        try {
-          const parsed = JSON.parse(line);
-
-          const text =
-            parsed.candidates?.[0]?.content?.parts?.[0]?.text ||
-            parsed.candidates?.[0]?.delta?.parts?.[0]?.text ||
-            "";
-
-          if (text) {
-            res.write(text);
-          }
-
-        } catch {
-          // ignore partial JSON
-        }
-      }
-
-      buffer = lines[lines.length - 1];
-    }
-
-    res.end();
+    res.json({ reply });
 
   } catch (error) {
     console.error("Server error:", error);
-    res.status(500).send("Server crashed");
+    res.status(500).json({ error: "Server crashed" });
   }
 });
 

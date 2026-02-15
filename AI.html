@@ -210,7 +210,7 @@ form.addEventListener("submit", async (e) => {
   addMessage(message, "user");
   input.value = "";
 
-  const botDiv = addMessage("", "bot");
+  const botDiv = addMessage("⏳ Thinking...", "bot");
 
   try {
     const res = await fetch("/api/chat", {
@@ -219,29 +219,17 @@ form.addEventListener("submit", async (e) => {
       body: JSON.stringify({ prompt: message })
     });
 
-    if (!res.ok || !res.body) {
-      botDiv.textContent = "⚠️ Server error.";
-      throw new Error("Server error");
-    }
+    const data = await res.json();
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-
-    let fullText = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value);
-      fullText += chunk;
-
-      botDiv.innerHTML = marked.parse(fullText);
-      scrollToBottom();
+    if (data.reply) {
+      botDiv.innerHTML = marked.parse(data.reply);
+    } else {
+      botDiv.textContent = "⚠️ No reply received.";
     }
 
   } catch (err) {
     console.error(err);
+    botDiv.textContent = "⚠️ Error connecting to server.";
   }
 
   input.disabled = false;
