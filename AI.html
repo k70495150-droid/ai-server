@@ -227,11 +227,20 @@ form.addEventListener("submit", async (e) => {
 
     const data = await res.json();
 
-    await typeWriterEffect(botDiv, data.reply, 10);
+    async function typeWriterEffect(element, text, speed = 15) {
+  element.innerHTML = "";
+  let currentText = "";
 
-botDiv.querySelectorAll("pre code").forEach((block) => {
-  hljs.highlightElement(block);
-});
+  for (let i = 0; i < text.length; i++) {
+    currentText += text[i];
+    element.innerHTML = marked.parse(currentText);
+
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    await new Promise(resolve => setTimeout(resolve, speed));
+  }
+}
+
 
 
   } catch (err) {
