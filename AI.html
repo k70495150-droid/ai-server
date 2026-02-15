@@ -111,9 +111,19 @@
       text-align: center;
       margin-top: 0.5rem;
     }
+
+    button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+input:disabled {
+  opacity: 0.7;
+}
+
   </style>
 
-  <!-- Highlight.js -->
+
   <link rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -146,6 +156,7 @@
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <script>
+  let isGenerating = false;
   const mainElement = document.getElementById("mainElement");
   const form = document.getElementById("chatForm");
   const input = document.getElementById("userInput");
@@ -153,36 +164,50 @@
   const typingIndicator = document.getElementById("typingIndicator");
 
   form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const message = input.value.trim();
-    if (!message) return;
+  if (isGenerating) return; // 🚫 Prevent spam
 
-    addMessage(message, "user");
-    input.value = "";
-    typingIndicator.style.display = "block";
+  const message = input.value.trim();
+  if (!message) return;
 
-    const botDiv = addMessage("", "bot");
+  isGenerating = true;
 
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: message }),
-      });
+  input.disabled = true;
+  form.querySelector("button").disabled = true;
 
-      if (!res.ok) throw new Error("Server error");
+  addMessage(message, "user");
+  input.value = "";
+  typingIndicator.style.display = "block";
 
-      const data = await res.json();
+  const botDiv = addMessage("", "bot");
 
-      await typeWriterEffect(botDiv, data.reply, 10);
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: message }),
+    });
 
-    } catch (err) {
-      botDiv.textContent = "⚠️ Error: Cannot reach the server.";
-    } finally {
-      typingIndicator.style.display = "none";
-    }
-  });
+    if (!res.ok) throw new Error("Server error");
+
+    const data = await res.json();
+
+    await typeWriterEffect(botDiv, data.reply, 10);
+
+  } catch (err) {
+    botDiv.textContent = "⚠️ Error: Cannot reach the server.";
+  } finally {
+    typingIndicator.style.display = "none";
+
+    input.disabled = false;
+    form.querySelector("button").disabled = false;
+    input.focus();
+
+    isGenerating = false;
+  }
+});
+
 
   function addMessage(text, sender) {
     const div = document.createElement("div");
