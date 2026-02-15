@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="theme-color" content="#0d0d0d" />
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Helpful Assistant</title>
-    <button class="theme-toggle" id="themeToggle">🌙</button>
+<meta name="theme-color" content="#0d0d0d" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Helpful Assistant</title>
 
-  <style>
-    :root {
+<style>
+:root {
   --bg: #0d0d0d;
   --header: #121212;
   --bot: #1a1a1a;
@@ -38,17 +37,16 @@ body {
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  transition: background 0.3s, color 0.3s;
+  transition: 0.3s;
 }
 
 header {
-  background-color: var(--header);
+  background: var(--header);
   padding: 1rem;
-  text-align: center;
-  border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 1px solid var(--border);
 }
 
 main {
@@ -70,18 +68,17 @@ main {
   border-radius: 14px;
   max-width: 85%;
   line-height: 1.5;
-  font-size: 0.95rem;
 }
 
 .user {
   align-self: flex-end;
-  background-color: var(--user);
+  background: var(--user);
   color: white;
 }
 
 .bot {
   align-self: flex-start;
-  background-color: var(--bot);
+  background: var(--bot);
   border: 1px solid var(--border);
 }
 
@@ -91,122 +88,82 @@ form {
   max-width: 900px;
   margin: 0 auto;
   padding: 0.8rem;
-  background-color: var(--header);
+  background: var(--header);
   border-top: 1px solid var(--border);
   gap: 0.5rem;
 }
 
 input {
   flex: 1;
-  background: var(--input);
-  border: 1px solid var(--border);
-  color: var(--text);
   padding: 0.8rem;
   border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--input);
+  color: var(--text);
   font-size: 16px;
 }
 
 button {
-  background-color: var(--user);
-  border: none;
-  color: white;
   padding: 0.8rem 1rem;
   border-radius: 12px;
+  border: none;
   cursor: pointer;
+  background: var(--user);
+  color: white;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .theme-toggle {
-  cursor: pointer;
   background: none;
   border: 1px solid var(--border);
   padding: 0.4rem 0.8rem;
   border-radius: 8px;
   color: var(--text);
+  cursor: pointer;
 }
-
-
-  </style>
-
-
-  <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-
+</style>
 </head>
 
 <body>
 
 <header>
-  <h1>Helpful Assistant</h1>
+  <h2>Helpful Assistant</h2>
+  <button class="theme-toggle" id="themeToggle">🌙</button>
 </header>
 
 <main id="mainElement">
   <div id="chatContainer" class="chat-container">
     <div class="message bot">
-      👋 Hello! I’m Helpful Assistant. Ask me anything!
+      👋 Hey! I’m your AI assistant. Ask me anything.
     </div>
-  </div>
-
-  <div id="typingIndicator" class="typing" style="display:none;">
-    Assistant is typing...
   </div>
 </main>
 
 <form id="chatForm">
   <input type="text" id="userInput" placeholder="Type your message..." required />
-  <input type="file" id="fileUpload" hidden>
-  <button type="button" id="uploadBtn">📎</button>
-
-  <button type="button" id="micButton">Voicechat</button>
-  <button type="submit">Send</button>
-
+  <button type="submit" id="sendBtn">Send</button>
 </form>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <script>
-  let isGenerating = false;
-  let autoScrollEnabled = true;
-  const mainElement = document.getElementById("mainElement");
-  const form = document.getElementById("chatForm");
-  const input = document.getElementById("userInput");
-  const chatContainer = document.getElementById("chatContainer");
-  const typingIndicator = document.getElementById("typingIndicator");
-  const themeToggle = document.getElementById("themeToggle");
-  const micButton = document.getElementById("micButton");
-  const uploadBtn = document.getElementById("uploadBtn");
-  const fileUpload = document.getElementById("fileUpload");
+const mainElement = document.getElementById("mainElement");
+const form = document.getElementById("chatForm");
+const input = document.getElementById("userInput");
+const chatContainer = document.getElementById("chatContainer");
+const sendBtn = document.getElementById("sendBtn");
+const themeToggle = document.getElementById("themeToggle");
 
-uploadBtn.addEventListener("click", () => {
-  fileUpload.click();
-});
+let isGenerating = false;
+let autoScrollEnabled = true;
 
-fileUpload.addEventListener("change", () => {
-  const file = fileUpload.files[0];
-  if (file) {
-    input.value += ` [Attached file: ${file.name}]`;
-  }
-});
-
-
-if ('webkitSpeechRecognition' in window) {
-  const recognition = new webkitSpeechRecognition();
-  recognition.continuous = false;
-  recognition.lang = "en-US";
-
-  micButton.addEventListener("click", () => {
-    recognition.start();
-  });
-
-  recognition.onresult = (event) => {
-    input.value = event.results[0][0].transcript;
-  };
-} else {
-  micButton.disabled = true;
-}
-
-
-// Load saved theme
+/* ===========================
+   Theme Toggle
+=========================== */
 if (localStorage.getItem("theme") === "light") {
   document.body.classList.add("light");
   themeToggle.textContent = "☀️";
@@ -214,43 +171,57 @@ if (localStorage.getItem("theme") === "light") {
 
 themeToggle.addEventListener("click", () => {
   document.body.classList.toggle("light");
-
   const isLight = document.body.classList.contains("light");
-
   themeToggle.textContent = isLight ? "☀️" : "🌙";
-
   localStorage.setItem("theme", isLight ? "light" : "dark");
 });
 
-
-  mainElement.addEventListener("scroll", () => {
-  const threshold = 50; // px from bottom
-
+/* ===========================
+   Scroll Detection
+=========================== */
+mainElement.addEventListener("scroll", () => {
+  const threshold = 50;
   const isNearBottom =
     mainElement.scrollHeight - mainElement.scrollTop - mainElement.clientHeight < threshold;
 
   autoScrollEnabled = isNearBottom;
 });
 
+function scrollToBottom() {
+  if (!autoScrollEnabled) return;
+  mainElement.scrollTop = mainElement.scrollHeight;
+}
 
-  form.addEventListener("submit", async (e) => {
+/* ===========================
+   Add Message
+=========================== */
+function addMessage(text, sender) {
+  const div = document.createElement("div");
+  div.classList.add("message", sender);
+  div.innerHTML = text;
+  chatContainer.appendChild(div);
+  scrollToBottom();
+  return div;
+}
+
+/* ===========================
+   Streaming Submit
+=========================== */
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
-
-  if (isGenerating) return; // 🚫 Prevent spam
+  if (isGenerating) return;
 
   const message = input.value.trim();
   if (!message) return;
 
+  isGenerating = true;
   autoScrollEnabled = true;
 
-  isGenerating = true;
-
   input.disabled = true;
-  form.querySelector("button").disabled = true;
+  sendBtn.disabled = true;
 
   addMessage(message, "user");
   input.value = "";
-  typingIndicator.style.display = "block";
 
   const botDiv = addMessage("", "bot");
 
@@ -261,57 +232,31 @@ themeToggle.addEventListener("click", () => {
       body: JSON.stringify({ prompt: message }),
     });
 
-    if (!res.ok) throw new Error("Server error");
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
 
-    const data = await res.json();
+    let fullText = "";
 
-    await typeWriterEffect(botDiv, data.reply, 5);
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-  } catch (err) {
-    botDiv.textContent = "⚠️ Error: Cannot reach the server.";
-  } finally {
-    typingIndicator.style.display = "none";
+      const chunk = decoder.decode(value);
+      fullText += chunk;
 
-    input.disabled = false;
-    form.querySelector("button").disabled = false;
-    input.focus();
-
-    isGenerating = false;
-  }
-});
-
-
-  function addMessage(text, sender) {
-    const div = document.createElement("div");
-    div.classList.add("message", sender);
-    div.textContent = text;
-    chatContainer.appendChild(div);
-    scrollToBottom();
-    return div;
-  }
-
-  async function typeWriterEffect(element, text, speed = 15) {
-    element.innerHTML = "";
-    let currentText = "";
-
-    for (let i = 0; i < text.length; i++) {
-      currentText += text[i];
-      element.innerHTML = marked.parse(currentText);
+      botDiv.innerHTML = marked.parse(fullText);
       scrollToBottom();
-      await new Promise(resolve => setTimeout(resolve, speed));
     }
 
-    element.querySelectorAll("pre code").forEach((block) => {
-      hljs.highlightElement(block);
-    });
+  } catch (err) {
+    botDiv.textContent = "⚠️ Error connecting to server.";
   }
 
-  function scrollToBottom() {
-  if (!autoScrollEnabled) return;
-
-  mainElement.scrollTop = mainElement.scrollHeight;
-}
-
+  input.disabled = false;
+  sendBtn.disabled = false;
+  input.focus();
+  isGenerating = false;
+});
 </script>
 
 </body>
