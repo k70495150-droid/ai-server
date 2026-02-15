@@ -10,7 +10,7 @@ dotenv.config();
 const app = express();
 
 /* ===============================
-   Fix __dirname for ES modules
+   Fix __dirname (ES Modules)
 ================================ */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,15 +40,21 @@ app.post("/api/chat", async (req, res) => {
       return res.status(400).json({ error: "Prompt is required" });
     }
 
-    // Set streaming headers
-    res.setHeader("Content-Type", "text/plain");
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).send("Missing GEMINI_API_KEY.");
+    }
+
+    // Set streaming headers (important for Railway)
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Transfer-Encoding", "chunked");
 
-    const response = await fetch(
+    const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:streamGenerateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({
           contents: [
             {
@@ -57,10 +63,13 @@ app.post("/api/chat", async (req, res) => {
                 {
                   text: `
 You are a friendly, intelligent AI assistant.
-Be slightly conversational (10% human).
-Use emojis occasionally.
+Be slightly conversational (about 10% human).
+Use emojis occasionally but not excessively.
+Avoid sounding robotic.
 Be clear and structured.
-User message: ${userPrompt}
+
+User message:
+${userPrompt}
                   `
                 }
               ]
@@ -70,13 +79,13 @@ User message: ${userPrompt}
       }
     );
 
-    if (!response.ok) {
-      const errorText = await response.text();
+    if (!geminiResponse.ok) {
+      const errorText = await geminiResponse.text();
       console.error("Gemini API Error:", errorText);
       return res.status(500).send("Gemini API error.");
     }
 
-    const reader = response.body.getReader();
+    const reader = geminiResponse.body.getReader();
     const decoder = new TextDecoder();
 
     let buffer = "";
@@ -87,15 +96,23 @@ User message: ${userPrompt}
 
       buffer += decoder.decode(value, { stream: true });
 
-      // Gemini streaming returns JSON lines separated by newline
+      // Split by newline (SSE format)
       const lines = buffer.split("\n");
 
       for (let i = 0; i < lines.length - 1; i++) {
-        const line = lines[i].trim();
+        let line = lines[i].trim();
         if (!line) continue;
+
+        // Gemini streaming sends: "data: {json}"
+        if (line.startsWith("data:")) {
+          line = line.replace("data:", "").trim();
+        }
+
+        if (line === "[DONE]") continue;
 
         try {
           const parsed = JSON.parse(line);
+
           const textChunk =
             parsed.candidates?.[0]?.content?.parts?.[0]?.text;
 
@@ -103,10 +120,11 @@ User message: ${userPrompt}
             res.write(textChunk);
           }
         } catch (err) {
-          // Ignore JSON parse errors for incomplete chunks
+          // Ignore partial/incomplete JSON chunks
         }
       }
 
+      // Keep last incomplete chunk in buffer
       buffer = lines[lines.length - 1];
     }
 
