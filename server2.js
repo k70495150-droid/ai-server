@@ -49,11 +49,9 @@ app.post("/api/chat", async (req, res) => {
               parts: [
                 {
                   text: `
-You are a friendly, intelligent AI assistant.
-Be slightly conversational (about 10% human).
-Use emojis occasionally.
-Avoid sounding robotic.
-Be clear and structured.
+You are a friendly AI assistant.
+Be slightly conversational and you may use emojis.
+
 
 User message:
 ${userPrompt}
