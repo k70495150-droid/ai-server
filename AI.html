@@ -164,6 +164,12 @@ button:hover {
 
 
   </style>
+
+  <link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+
 </head>
 
 <body>
@@ -222,6 +228,11 @@ form.addEventListener("submit", async (e) => {
     const data = await res.json();
 
     botDiv.innerHTML = marked.parse(data.reply);
+
+botDiv.querySelectorAll("pre code").forEach((block) => {
+  hljs.highlightElement(block);
+});
+
 
   } catch (err) {
     console.error("Fetch Error:", err);
