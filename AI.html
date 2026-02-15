@@ -7,9 +7,7 @@
   <title>Helpful Assistant</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -46,9 +44,9 @@
       padding: 0.8rem 1rem;
       border-radius: 14px;
       max-width: 85%;
-      word-wrap: break-word;
       line-height: 1.5;
       font-size: 0.95rem;
+      word-wrap: break-word;
     }
 
     .user {
@@ -124,103 +122,97 @@
 
 <body>
 
-  <header>
-    <h1>Helpful Assistant</h1>
-  </header>
+<header>
+  <h1>Helpful Assistant</h1>
+</header>
 
-  <main>
-    <div id="chatContainer" class="chat-container">
-      <div class="message bot">
-        👋 Hello! I’m Helpful Assistant. Ask me anything!
-      </div>
+<main id="mainElement">
+  <div id="chatContainer" class="chat-container">
+    <div class="message bot">
+      👋 Hello! I’m Helpful Assistant. Ask me anything!
     </div>
+  </div>
 
-    <div id="typingIndicator" class="typing" style="display:none;">
-      Assistant is typing...
-    </div>
-  </main>
+  <div id="typingIndicator" class="typing" style="display:none;">
+    Assistant is typing...
+  </div>
+</main>
 
-  <form id="chatForm">
-    <input type="text" id="userInput" placeholder="Type your message..." required />
-    <button type="submit">Send</button>
-  </form>
+<form id="chatForm">
+  <input type="text" id="userInput" placeholder="Type your message..." required />
+  <button type="submit">Send</button>
+</form>
 
-  <!-- Marked.js -->
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-  <script>
-    const mainElement = document.querySelector("main");
-    const form = document.getElementById("chatForm");
-    const input = document.getElementById("userInput");
-    const chatContainer = document.getElementById("chatContainer");
-    const typingIndicator = document.getElementById("typingIndicator");
+<script>
+  const mainElement = document.getElementById("mainElement");
+  const form = document.getElementById("chatForm");
+  const input = document.getElementById("userInput");
+  const chatContainer = document.getElementById("chatContainer");
+  const typingIndicator = document.getElementById("typingIndicator");
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-      const message = input.value.trim();
-      if (!message) return;
+    const message = input.value.trim();
+    if (!message) return;
 
-      addMessage(message, "user");
-      input.value = "";
-      typingIndicator.style.display = "block";
+    addMessage(message, "user");
+    input.value = "";
+    typingIndicator.style.display = "block";
 
-      const botDiv = addMessage("", "bot");
+    const botDiv = addMessage("", "bot");
 
-      try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: message }),
-        });
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: message }),
+      });
 
-        if (!res.ok) throw new Error("Server error");
+      if (!res.ok) throw new Error("Server error");
 
-        const data = await res.json();
+      const data = await res.json();
 
-        await typeWriterEffect(botDiv, data.reply, 10);
+      await typeWriterEffect(botDiv, data.reply, 10);
 
-      } catch (err) {
-        botDiv.textContent = "⚠️ Error: Cannot reach the server.";
-      } finally {
-        typingIndicator.style.display = "none";
-      }
-    });
-
-    function addMessage(text, sender) {
-      const div = document.createElement("div");
-      div.classList.add("message", sender);
-      div.textContent = text;
-      chatContainer.appendChild(div);
-      scrollToBottom();
-      return div;
+    } catch (err) {
+      botDiv.textContent = "⚠️ Error: Cannot reach the server.";
+    } finally {
+      typingIndicator.style.display = "none";
     }
+  });
 
-    async function typeWriterEffect(element, text, speed = 15) {
-      element.innerHTML = "";
-      let currentText = "";
-
-      for (let i = 0; i < text.length; i++) {
-        currentText += text[i];
-        element.innerHTML = marked.parse(currentText);
-
-        function scrollToBottom() {
-  mainElement.scrollTo({
-    top: mainElement.scrollHeight,
-    behavior: "auto"
+  function addMessage(text, sender) {
+    const div = document.createElement("div");
+    div.classList.add("message", sender);
+    div.textContent = text;
+    chatContainer.appendChild(div);
+    scrollToBottom();
+    return div;
   }
-      element.querySelectorAll("pre code").forEach((block) => {
-        hljs.highlightElement(block);
-      });
+
+  async function typeWriterEffect(element, text, speed = 15) {
+    element.innerHTML = "";
+    let currentText = "";
+
+    for (let i = 0; i < text.length; i++) {
+      currentText += text[i];
+      element.innerHTML = marked.parse(currentText);
+      scrollToBottom();
+      await new Promise(resolve => setTimeout(resolve, speed));
     }
 
-    function scrollToBottom() {
-      chatContainer.scrollTo({
-        top: chatContainer.scrollHeight,
-        behavior: "auto"
-      });
-    }
-  </script>
+    element.querySelectorAll("pre code").forEach((block) => {
+      hljs.highlightElement(block);
+    });
+  }
+
+  function scrollToBottom() {
+    mainElement.scrollTop = mainElement.scrollHeight;
+  }
+</script>
 
 </body>
 </html>
