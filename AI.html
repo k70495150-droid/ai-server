@@ -149,6 +149,7 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <script>
+    const mainElement = document.querySelector("main");
     const form = document.getElementById("chatForm");
     const input = document.getElementById("userInput");
     const chatContainer = document.getElementById("chatContainer");
@@ -203,12 +204,11 @@
         currentText += text[i];
         element.innerHTML = marked.parse(currentText);
 
-        scrollToBottom();
-
-        await new Promise(resolve => setTimeout(resolve, speed));
-      }
-
-      // Highlight after full render
+        function scrollToBottom() {
+  mainElement.scrollTo({
+    top: mainElement.scrollHeight,
+    behavior: "auto"
+  }
       element.querySelectorAll("pre code").forEach((block) => {
         hljs.highlightElement(block);
       });
