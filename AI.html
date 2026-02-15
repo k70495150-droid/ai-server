@@ -49,11 +49,17 @@ main {
 }
 
 .message {
-  padding: 12px 16px;
-  border-radius: 16px;
+  padding: 14px 18px;
+  border-radius: 18px;
   max-width: 80%;
   line-height: 1.6;
   word-wrap: break-word;
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .user {
@@ -73,7 +79,7 @@ main {
   bottom: 0;
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(to top, #0f0f0f 80%, transparent);
+  background: linear-gradient(to top, #0f0f0f 85%, transparent);
 }
 
 .input-box {
@@ -105,6 +111,11 @@ button {
   font-size: 18px;
 }
 
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .send-btn {
   background: var(--user);
   padding: 8px 14px;
@@ -114,6 +125,13 @@ button {
 
 input[type="file"] {
   display: none;
+}
+
+pre {
+  background: #111;
+  padding: 10px;
+  border-radius: 8px;
+  overflow-x: auto;
 }
 </style>
 </head>
@@ -125,7 +143,7 @@ input[type="file"] {
 <main id="chatScroll">
   <div id="chatContainer" class="chat-container">
     <div class="message bot">
-      👋 Hi! I can analyze files and listen to your voice.
+      👋 Hi! I’m here to help. Upload files, speak, or ask anything.
     </div>
   </div>
 </main>
@@ -133,11 +151,11 @@ input[type="file"] {
 <div class="input-wrapper">
   <form id="chatForm" class="input-box">
     <label for="fileInput">📎</label>
-    <input type="file" id="fileInput" accept=".txt,.md,.json,.js,.html,.css" />
+    <input type="file" id="fileInput" accept=".txt,.md,.json,.js,.html,.css"/>
 
     <button type="button" id="micBtn">🎤</button>
 
-    <input type="text" id="userInput" placeholder="Ask anything..." />
+    <input type="text" id="userInput" placeholder="Ask something thoughtful..." />
 
     <button type="submit" class="send-btn">Send</button>
   </form>
@@ -156,7 +174,7 @@ let fileContent = "";
 let isGenerating = false;
 let autoScrollEnabled = true;
 
-/* ---------- Scroll ---------- */
+/* Scroll Logic */
 function scrollToBottom() {
   scrollArea.scrollTop = scrollArea.scrollHeight;
 }
@@ -169,7 +187,7 @@ scrollArea.addEventListener("scroll", () => {
   autoScrollEnabled = nearBottom;
 });
 
-/* ---------- Lock / Unlock ---------- */
+/* Locking */
 function lockInput() {
   isGenerating = true;
   input.disabled = true;
@@ -187,7 +205,7 @@ function unlockInput() {
   input.focus();
 }
 
-/* ---------- Add Message ---------- */
+/* Add Message */
 function addMessage(text, sender) {
   const div = document.createElement("div");
   div.classList.add("message", sender);
@@ -197,25 +215,23 @@ function addMessage(text, sender) {
   return div;
 }
 
-/* ---------- File Upload ---------- */
+/* File Upload */
 fileInput.addEventListener("change", () => {
   if (isGenerating) return;
-
   const file = fileInput.files[0];
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = (e) => {
     fileContent = e.target.result;
     addMessage(`📎 Uploaded: ${file.name}`, "user");
   };
   reader.readAsText(file);
 });
 
-/* ---------- Microphone ---------- */
+/* Microphone */
 if ("webkitSpeechRecognition" in window) {
   const recognition = new webkitSpeechRecognition();
-  recognition.continuous = false;
   recognition.lang = "en-US";
 
   micBtn.onclick = () => {
@@ -236,7 +252,7 @@ if ("webkitSpeechRecognition" in window) {
   micBtn.disabled = true;
 }
 
-/* ---------- Typewriter ---------- */
+/* Thoughtful AI Typewriter */
 function typeWriterEffect(element, text) {
   return new Promise(resolve => {
     element.innerHTML = "";
@@ -247,14 +263,12 @@ function typeWriterEffect(element, text) {
         element.innerHTML = marked.parse(text.slice(0, index + 1));
         index++;
 
-        if (autoScrollEnabled) {
-          scrollToBottom();
-        }
+        if (autoScrollEnabled) scrollToBottom();
 
-        const delay = Math.random() * 10 + 5;
+        const delay = Math.random() * 10 + 5; // thoughtful speed
         setTimeout(type, delay);
       } else {
-        resolve(); // VERY IMPORTANT
+        resolve();
       }
     }
 
@@ -262,7 +276,7 @@ function typeWriterEffect(element, text) {
   });
 }
 
-/* ---------- Submit ---------- */
+/* Submit */
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (isGenerating) return;
@@ -281,7 +295,7 @@ form.addEventListener("submit", async (e) => {
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         prompt: message,
         fileContent: fileContent
@@ -289,8 +303,7 @@ form.addEventListener("submit", async (e) => {
     });
 
     const data = await res.json();
-
-    await typeWriterEffect(botDiv, data.reply); // WAITS until typing done
+    await typeWriterEffect(botDiv, data.reply);
 
   } catch {
     botDiv.textContent = "⚠️ Something went wrong.";
@@ -301,8 +314,6 @@ form.addEventListener("submit", async (e) => {
   unlockInput();
 });
 </script>
-
-
 
 </body>
 </html>
