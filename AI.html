@@ -227,7 +227,7 @@ form.addEventListener("submit", async (e) => {
 
     const data = await res.json();
 
-    botDiv.innerHTML = marked.parse(data.reply);
+    await typeWriterEffect(botDiv, data.reply, 10);
 
 botDiv.querySelectorAll("pre code").forEach((block) => {
   hljs.highlightElement(block);
@@ -249,6 +249,17 @@ function addMessage(text, sender) {
   chatContainer.appendChild(div);
   chatContainer.scrollTop = chatContainer.scrollHeight;
   return div;
+}
+
+async function typeWriterEffect(element, text, speed = 15) {
+  element.innerHTML = "";
+  let currentText = "";
+
+  for (let i = 0; i < text.length; i++) {
+    currentText += text[i];
+    element.innerHTML = marked.parse(currentText);
+    await new Promise(resolve => setTimeout(resolve, speed));
+  }
 }
 </script>
 
