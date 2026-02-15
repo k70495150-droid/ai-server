@@ -21,14 +21,27 @@ app.get("/", (req, res) => {
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const { prompt } = req.body;
+    const { prompt, fileContent } = req.body;
 
-    if (!prompt) {
-      return res.status(400).json({ error: "Prompt required" });
+    if (!prompt && !fileContent) {
+      return res.status(400).json({ error: "Prompt or file required" });
     }
 
     if (!process.env.GEMINI_API_KEY) {
       return res.status(500).json({ error: "Missing GEMINI_API_KEY" });
+    }
+
+    let finalPrompt = `You are a friendly AI assistant.
+Be slightly conversational and you may use emojis.
+
+`;
+
+    if (fileContent) {
+      finalPrompt += `The user uploaded this file content:\n\n${fileContent}\n\n`;
+    }
+
+    if (prompt) {
+      finalPrompt += `User message:\n${prompt}`;
     }
 
     const response = await fetch(
@@ -39,26 +52,12 @@ app.post("/api/chat", async (req, res) => {
         body: JSON.stringify({
           contents: [
             {
-              parts: [
-                {
-                  text: `You are a friendly AI assistant.
-Be slightly conversational and you may use emojis.
-
-User message:
-${prompt}`
-                }
-              ]
+              parts: [{ text: finalPrompt }]
             }
           ]
         })
       }
     );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Gemini error:", errorText);
-      return res.status(500).json({ error: "Gemini API error" });
-    }
 
     const data = await response.json();
 
@@ -73,6 +72,7 @@ ${prompt}`
     res.status(500).json({ error: "Server crashed" });
   }
 });
+
 
 const PORT = process.env.PORT || 8080;
 

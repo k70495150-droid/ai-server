@@ -1,49 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Helpful Assistant</title>
-
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <style>
-:root {
-  --bg: #0d0d0d;
-  --header: #141414;
-  --bot: #1c1c1c;
-  --user: #4c4cff;
-  --text: #ffffff;
-  --border: #2a2a2a;
-  --input: #1a1a1a;
-}
-
-.light {
-  --bg: #f5f5f5;
-  --header: #ffffff;
-  --bot: #ffffff;
-  --user: #4c4cff;
-  --text: #000000;
-  --border: #ddd;
-  --input: #ffffff;
-}
-
-* { box-sizing: border-box; }
-
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  font-family: Arial;
+  background: #0d0d0d;
+  color: white;
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  height: 100vh;
 }
 
 header {
   padding: 1rem;
-  background: var(--header);
-  border-bottom: 1px solid var(--border);
+  background: #141414;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -55,73 +31,49 @@ main {
   padding: 1rem;
 }
 
-.chat-container {
-  max-width: 900px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
 .message {
-  padding: 0.8rem 1rem;
-  border-radius: 14px;
-  max-width: 85%;
-  line-height: 1.5;
-  word-wrap: break-word;
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  max-width: 80%;
 }
 
 .user {
+  background: #4c4cff;
   align-self: flex-end;
-  background: var(--user);
-  color: white;
 }
 
 .bot {
-  align-self: flex-start;
-  background: var(--bot);
-  border: 1px solid var(--border);
+  background: #1c1c1c;
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
 }
 
 form {
   display: flex;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: var(--header);
-  border-top: 1px solid var(--border);
+  gap: 5px;
+  padding: 10px;
+  background: #141414;
 }
 
-input {
+input[type="text"] {
   flex: 1;
-  padding: 0.8rem;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--input);
-  color: var(--text);
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
   font-size: 16px;
 }
 
 button {
-  padding: 0.8rem 1rem;
-  border-radius: 12px;
+  padding: 10px;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
-  background: var(--user);
+  background: #4c4cff;
   color: white;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.theme-toggle {
-  background: none;
-  border: 1px solid var(--border);
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
-  cursor: pointer;
-  color: var(--text);
 }
 </style>
 </head>
@@ -129,61 +81,40 @@ button:disabled {
 <body>
 
 <header>
-  <h2>Helpful Assistant</h2>
-  <button id="themeToggle" class="theme-toggle">🌙</button>
+  <h3>Helpful Assistant</h3>
 </header>
 
 <main id="chatScroll">
   <div id="chatContainer" class="chat-container">
     <div class="message bot">
-      👋 Hey! I'm your AI assistant. Ask me anything.
+      👋 Hey! I can now analyze files and hear you speak!
     </div>
   </div>
 </main>
 
 <form id="chatForm">
-  <input id="userInput" type="text" placeholder="Type your message..." required />
-  <button id="sendBtn">Send</button>
+  <input type="file" id="fileInput" accept=".txt,.md,.json,.js,.html,.css" />
+  <button type="button" id="micBtn">🎤</button>
+  <input type="text" id="userInput" placeholder="Type message..." />
+  <button type="submit">Send</button>
 </form>
 
 <script>
 const form = document.getElementById("chatForm");
 const input = document.getElementById("userInput");
-const sendBtn = document.getElementById("sendBtn");
 const chatContainer = document.getElementById("chatContainer");
 const scrollArea = document.getElementById("chatScroll");
-const themeToggle = document.getElementById("themeToggle");
+const fileInput = document.getElementById("fileInput");
+const micBtn = document.getElementById("micBtn");
 
+let fileContent = "";
 let isGenerating = false;
-let autoScrollEnabled = true;
 
-/* Theme */
-if (localStorage.getItem("theme") === "light") {
-  document.body.classList.add("light");
-  themeToggle.textContent = "☀️";
-}
-
-themeToggle.onclick = () => {
-  document.body.classList.toggle("light");
-  const isLight = document.body.classList.contains("light");
-  themeToggle.textContent = isLight ? "☀️" : "🌙";
-  localStorage.setItem("theme", isLight ? "light" : "dark");
-};
-
-/* Scroll detection */
-scrollArea.addEventListener("scroll", () => {
-  const threshold = 50;
-  autoScrollEnabled =
-    scrollArea.scrollHeight - scrollArea.scrollTop - scrollArea.clientHeight < threshold;
-});
-
+/* Auto Scroll */
 function scrollToBottom() {
-  if (autoScrollEnabled) {
-    scrollArea.scrollTop = scrollArea.scrollHeight;
-  }
+  scrollArea.scrollTop = scrollArea.scrollHeight;
 }
 
-/* Add message */
 function addMessage(text, sender) {
   const div = document.createElement("div");
   div.classList.add("message", sender);
@@ -193,21 +124,57 @@ function addMessage(text, sender) {
   return div;
 }
 
+/* File Upload */
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    fileContent = e.target.result;
+    addMessage(`📎 Uploaded file: ${file.name}`, "user");
+  };
+  reader.readAsText(file);
+});
+
+/* Microphone */
+if ("webkitSpeechRecognition" in window) {
+  const recognition = new webkitSpeechRecognition();
+  recognition.continuous = false;
+  recognition.lang = "en-US";
+
+  micBtn.onclick = () => {
+    recognition.start();
+    micBtn.textContent = "🎙️ Listening...";
+  };
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    input.value = transcript;
+    micBtn.textContent = "🎤";
+  };
+
+  recognition.onerror = () => {
+    micBtn.textContent = "🎤";
+  };
+} else {
+  micBtn.disabled = true;
+}
+
 /* Submit */
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (isGenerating) return;
 
   const message = input.value.trim();
-  if (!message) return;
+
+  if (!message && !fileContent) return;
 
   isGenerating = true;
-  autoScrollEnabled = true;
-
   input.disabled = true;
-  sendBtn.disabled = true;
 
-  addMessage(message, "user");
+  if (message) addMessage(message, "user");
+
   input.value = "";
 
   const botDiv = addMessage("⏳ Thinking...", "bot");
@@ -216,25 +183,22 @@ form.addEventListener("submit", async (e) => {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: message })
+      body: JSON.stringify({
+        prompt: message,
+        fileContent: fileContent
+      })
     });
 
     const data = await res.json();
+    botDiv.innerHTML = marked.parse(data.reply);
 
-    if (data.reply) {
-      botDiv.innerHTML = marked.parse(data.reply);
-    } else {
-      botDiv.textContent = "⚠️ No reply received.";
-    }
-
-  } catch (err) {
-    console.error(err);
-    botDiv.textContent = "⚠️ Error connecting to server.";
+  } catch {
+    botDiv.textContent = "⚠️ Error.";
   }
 
+  fileContent = "";
+  fileInput.value = "";
   input.disabled = false;
-  sendBtn.disabled = false;
-  input.focus();
   isGenerating = false;
 });
 </script>
