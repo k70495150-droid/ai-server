@@ -43,15 +43,30 @@ app.post("/api/chat", async (req, res) => {
     }
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: userPrompt }] }],
-        }),
-      }
-    );
+  `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [{
+            text: `
+You are a friendly, intelligent AI assistant.
+Be slightly conversational and natural (about 10% human).
+You may use emojis occasionally but not excessively.
+Avoid sounding robotic.
+Be clear, helpful, and structured.
+User message: ${prompt}
+            `
+          }]
+        }
+      ]
+    })
+  }
+);
+
 
     const data = await response.json();
 
