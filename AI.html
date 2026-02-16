@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Helpful Assistant</title>
+<header>
+  Helpful Assistant
+  <button id="themeToggle" style="float:right;">🌙</button>
+</header>
+
 
 
 <link rel="stylesheet"
@@ -22,6 +26,17 @@ href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-d
   --bot: #1f1f1f;
   --border: #2a2a2a;
 }
+
+
+body.light {
+  --bg: #f5f5f5;
+  --text: #111111;
+  --input-bg: #ffffff;
+  --user: #2563eb;
+  --bot: #ffffff;
+  --border: #dddddd;
+}
+
 
 body {
   margin: 0;
@@ -150,6 +165,28 @@ input[type="file"] {
 </div>
 
 <script>
+const themeToggle = document.getElementById("themeToggle");
+
+
+if (localStorage.getItem("theme") === "light") {
+  document.body.classList.add("light");
+  themeToggle.textContent = "☀️";
+}
+
+
+themeToggle.addEventListener("click", () => {
+  document.body.classList.toggle("light");
+
+  if (document.body.classList.contains("light")) {
+    localStorage.setItem("theme", "light");
+    themeToggle.textContent = "☀️";
+  } else {
+    localStorage.setItem("theme", "dark");
+    themeToggle.textContent = "🌙";
+  }
+});
+
+
   marked.setOptions({
   highlight: function(code, lang) {
     if (hljs.getLanguage(lang)) {
