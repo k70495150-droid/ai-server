@@ -156,7 +156,7 @@ let fileContent = "";
 let isGenerating = false;
 let autoScrollEnabled = true;
 
-/* ---------- Scroll ---------- */
+/* Scroll */
 function scrollToBottom() {
   scrollArea.scrollTop = scrollArea.scrollHeight;
 }
@@ -169,7 +169,7 @@ scrollArea.addEventListener("scroll", () => {
   autoScrollEnabled = nearBottom;
 });
 
-/* ---------- Lock / Unlock ---------- */
+/* Lock */
 function lockInput() {
   isGenerating = true;
   input.disabled = true;
@@ -187,7 +187,7 @@ function unlockInput() {
   input.focus();
 }
 
-/* ---------- Add Message ---------- */
+/* Add Message */
 function addMessage(text, sender) {
   const div = document.createElement("div");
   div.classList.add("message", sender);
@@ -197,7 +197,7 @@ function addMessage(text, sender) {
   return div;
 }
 
-/* ---------- File Upload ---------- */
+/* File Upload */
 fileInput.addEventListener("change", () => {
   if (isGenerating) return;
 
@@ -205,17 +205,16 @@ fileInput.addEventListener("change", () => {
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = e => {
     fileContent = e.target.result;
     addMessage(`📎 Uploaded: ${file.name}`, "user");
   };
   reader.readAsText(file);
 });
 
-/* ---------- Microphone ---------- */
+/* Microphone */
 if ("webkitSpeechRecognition" in window) {
   const recognition = new webkitSpeechRecognition();
-  recognition.continuous = false;
   recognition.lang = "en-US";
 
   micBtn.onclick = () => {
@@ -224,7 +223,7 @@ if ("webkitSpeechRecognition" in window) {
     micBtn.textContent = "🎙️";
   };
 
-  recognition.onresult = (event) => {
+  recognition.onresult = event => {
     input.value = event.results[0][0].transcript;
     micBtn.textContent = "🎤";
   };
@@ -236,7 +235,7 @@ if ("webkitSpeechRecognition" in window) {
   micBtn.disabled = true;
 }
 
-/* ---------- Typewriter ---------- */
+/* Faster Thoughtful Typewriter (5 + 2.5ms style) */
 function typeWriterEffect(element, text) {
   return new Promise(resolve => {
     element.innerHTML = "";
@@ -247,14 +246,12 @@ function typeWriterEffect(element, text) {
         element.innerHTML = marked.parse(text.slice(0, index + 1));
         index++;
 
-        if (autoScrollEnabled) {
-          scrollToBottom();
-        }
+        if (autoScrollEnabled) scrollToBottom();
 
-        const delay = Math.random() * 10 + 5;
+        const delay = Math.random() * 2.5 + 5; // 5–7.5ms
         setTimeout(type, delay);
       } else {
-        resolve(); // VERY IMPORTANT
+        resolve();
       }
     }
 
@@ -262,8 +259,8 @@ function typeWriterEffect(element, text) {
   });
 }
 
-/* ---------- Submit ---------- */
-form.addEventListener("submit", async (e) => {
+/* Submit */
+form.addEventListener("submit", async e => {
   e.preventDefault();
   if (isGenerating) return;
 
@@ -290,7 +287,7 @@ form.addEventListener("submit", async (e) => {
 
     const data = await res.json();
 
-    await typeWriterEffect(botDiv, data.reply); // WAITS until typing done
+    await typeWriterEffect(botDiv, data.reply);
 
   } catch {
     botDiv.textContent = "⚠️ Something went wrong.";
@@ -301,6 +298,7 @@ form.addEventListener("submit", async (e) => {
   unlockInput();
 });
 </script>
+
 
 
 </body>
