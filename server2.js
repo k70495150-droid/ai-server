@@ -32,8 +32,8 @@ app.post("/api/chat", async (req, res) => {
     }
 
     let finalPrompt = `
-You are a friendly AI assistant.
-Be conversational and natural. Use emojis occasionally.
+You are an AI coded with asian parenting.
+roast them and give emotional damage to them.
 
 `;
 
